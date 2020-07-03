@@ -3,39 +3,37 @@
      <input type="text" class="todo-input" placeholder="Que necesitas hacer" @keyup.enter="addTodo" v-model="newTodo">
      <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
      <todo-item v-for="(todo,index) in todosFiltered" :key="todo.id" :todo="todo" :index="index" :checkAll="anyRemaining" 
-     @removeItem="removeItem"
-     @finishedEdit="finishedEdit"
      > </todo-item>
      </transition-group>
-
      <div class="extra-container"> 
-         <div><label><input type="checkbox" :checked="anyRemaining" @change="checkAllTodos">Chequear todo</label></div>
-         <div>{{remaining}} faltantes</div>
+         <todo-check-all :anyRemaining="anyRemaining"></todo-check-all>
+         <todo-item-remaining  :remaining="remaining"></todo-item-remaining>
      </div>
-
-         <div class="extra-container">
-      <div>
-        <button :class="{ active: filter == 'all' }" @click="filter = 'all'">Todos</button>
-        <button :class="{ active: filter == 'active' }" @click="filter = 'active'">Activo</button>
-        <button :class="{ active: filter == 'completed' }" @click="filter = 'completed'">Completado</button>
-      </div>
-
-      <div>
-        <transition name="fade">
-        <button v-if="showClearCompletedButton" @click="clearCompleted">Limpiar completados</button>
-        </transition>
-      </div>
-
+     <div class="extra-container">
+       <todo-filtered></todo-filtered>
+       <div>
+         <transition name="fade">
+           <todo-clear-completed :showClearCompletedButton="showClearCompletedButton"></todo-clear-completed>
+         </transition>
+       </div>
     </div>
  </div>
 </template>
 
 <script>
 import TodoItem from './TodoItem'
+import TodoItemRemaining from './TodoItemRemaining'
+import TodoCheckAll from './TodoCheckAll'
+import TodoFiltered from './TodoFiltered'
+import TodoClearCompleted from './TodoClearCompleted'
 export default {
   name: 'todo-list',
   components:{
      TodoItem,
+     TodoItemRemaining,
+     TodoCheckAll,
+     TodoFiltered,
+     TodoClearCompleted
   },
   data () {
     return {
@@ -58,6 +56,20 @@ export default {
         },
         ]
     }
+  },
+  created(){
+     eventBus.$on('removeItem',(index)=>this.removeItem(index))
+     eventBus.$on('finishedEdit',(data)=>this.finishedEdit(data))
+     eventBus.$on('checkAllTodos',(checked)=>this.checkAllTodos(checked))
+     eventBus.$on('filterChanged',(filter)=>this.filter=filter)
+     eventBus.$on('clearCompleted',()=>this.clearCompleted())
+  },
+  beforeDestroy() {
+     eventBus.$off('removeItem',(index)=>this.removeItem(index))
+     eventBus.$off('finishedEdit',(data)=>this.finishedEdit(data))
+     eventBus.$off('checkAllTodos',(checked)=>this.checkAllTodos(checked))
+     eventBus.$off('filterChanged',(filter)=>this.filter=filter)
+     eventBus.$off('clearCompleted',()=>this.clearCompleted())
   },
   computed: {
       remaining(){
