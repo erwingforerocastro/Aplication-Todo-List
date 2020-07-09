@@ -8,7 +8,7 @@
 
 # Aplication-Todo-List
 
-**Aplicacion todo-list hecha con vue.js**
+**Aplicacion todo-list hecha con vue.js y laravel**
 
 Erwing FC @ 2020
 </div>
