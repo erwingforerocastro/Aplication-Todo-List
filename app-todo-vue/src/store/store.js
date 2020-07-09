@@ -1,24 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import axios from 'axios'
 
 Vue.use(Vuex)
+axios.defaults.baseURL = 'http://127.0.0.1:8000/api'
 
 export const store = new Vuex.Store({
     state: {
         filter: 'all',
-        todos: [{
-                'id': 1,
-                'title': 'Finish Vue Screencast',
-                'editing': false,
-                'completed': false,
-            },
-            {
-                'id': 2,
-                'title': 'Take over world',
-                'editing': false,
-                'completed': false,
-            },
-        ]
+        todos: []
     },
     getters: {
         remaining(state) {
@@ -50,6 +40,7 @@ export const store = new Vuex.Store({
             })
         },
         clearCompleted(state) {
+
             state.todos = state.todos.filter(t => !t.completed)
         },
         changeFilter(state, filter) {
@@ -67,14 +58,24 @@ export const store = new Vuex.Store({
         saveTodo(state, todo) {
             let index = state.todos.findIndex(item => item.id == todo.id)
             state.todos.splice(index, 1, todo)
-        }
+        },
+        retrieveTodos(state, todos) {
+            state.todos = todos
+
+        },
 
     },
     actions: {
         addTodo(context, todo) {
-            setTimeout(() => {
-                context.commit('addTodo', todo)
-            }, 1000)
+            axios.post('/todos', {
+                title: todo.title,
+                completed: false
+            }).then(res => {
+                console.log(res)
+                context.commit('addTodo', res.data)
+            }).catch(err => {
+                console.log(err)
+            })
 
         },
         clearCompleted(context) {
@@ -82,15 +83,33 @@ export const store = new Vuex.Store({
         },
         changeFilter(context, filter) {
             context.commit('changeFilter', filter)
+
         },
         checkAllTodos(context, checked) {
             context.commit('checkAllTodos', checked)
+
         },
         removeItem(context, id) {
             context.commit('removeItem', id)
+
         },
         saveTodo(context, todo) {
-            context.commit('saveTodo', todo)
-        }
+            axios.patch(`/todos/${todo.id}`, {
+                title: todo.title,
+                completed: todo.completed
+            }).then(res => {
+                context.commit('saveTodo', res.data)
+            }).catch(err => {
+                console.log(err)
+            })
+
+        },
+        retrieveTodos(context) {
+            axios.get('/todos').then(res => {
+                context.commit('retrieveTodos', res.data)
+            }).catch(err => {
+                console.log(err)
+            })
+        },
     }
 })

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Todo;
 use Illuminate\Http\Request;
+use DB;
 
 class TodoController extends Controller
 {
@@ -14,18 +15,10 @@ class TodoController extends Controller
      */
     public function index()
     {
-        //
+        return Todo::all();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -35,30 +28,17 @@ class TodoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data=$request->validate([
+            'title'=>'required|string',
+            'completed'=>'required|boolean'
+        ]);
+
+        $todo = Todo::create($data);
+
+        return response($todo,201);
+
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Todo  $todo
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Todo $todo)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Todo  $todo
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Todo $todo)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -69,7 +49,14 @@ class TodoController extends Controller
      */
     public function update(Request $request, Todo $todo)
     {
-        //
+        $data=$request->validate([
+            'title'=>'required|string',
+            'completed'=>'required|boolean'
+        ]);
+
+        $todo->update($data);
+
+        return response($todo,200);
     }
 
     /**
@@ -80,6 +67,8 @@ class TodoController extends Controller
      */
     public function destroy(Todo $todo)
     {
-        //
+        $todo->delete();
+        DB::raw('ALTER TABLE todos AUTO_INCREMENT = 1');
+        return response('elemento eliminado',200); 
     }
 }

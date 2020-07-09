@@ -1,5 +1,5 @@
 <template>
-    <div><label><input type="checkbox" :checked="anyRemaining" @change="checkAllTodos">Chequear todo</label></div>
+    <div><label><input type="checkbox" :checked="anyRemaining" @click="checkAllTodos">Chequear todo</label></div>
 </template>
 <script>
 export default {

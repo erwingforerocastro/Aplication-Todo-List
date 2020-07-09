@@ -43,18 +43,16 @@ export default {
     }
   },
   created(){
-    //  eventBus.$on('removeItem',(id)=>this.removeItem(id))
-    //  eventBus.$on('finishedEdit',(data)=>this.finishedEdit(data))
-    //  eventBus.$on('checkAllTodos',(checked)=>this.checkAllTodos(checked))
-    //  eventBus.$on('filterChanged',(filter)=>this.$store.state.filter=filter)
-    //  eventBus.$on('clearCompleted',()=>this.clearCompleted())
+    this.$store.dispatch('retrieveTodos')
+  },
+  updated() {
+    this.nextId=this.$store.state.todos.reduce((acum,current)=>{
+      if(acum<current.id){
+        return acum=current.id
+      }
+    },0)+1;
   },
   beforeDestroy() {
-    //  eventBus.$off('removeItem',(index)=>this.removeItem(index))
-    //  eventBus.$off('finishedEdit')
-    //  eventBus.$off('checkAllTodos')
-    //  eventBus.$off('filterChanged')
-    //  eventBus.$off('clearCompleted')
   },
   computed: {
       remaining(){
@@ -73,7 +71,7 @@ export default {
   methods: {
     addTodo(){
       if(this.newTodo.trim().length==0){return}
-      this.$store.commit('addTodo',{
+      this.$store.dispatch('addTodo',{
         id:this.nextId,
         title:this.newTodo,
       })

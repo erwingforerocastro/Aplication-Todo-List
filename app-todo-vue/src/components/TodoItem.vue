@@ -61,7 +61,7 @@ export default {
               this.title=this.beforeEditcache
            }
            this.editing=false
-           this.$store.commit('saveTodo',{
+           this.$store.dispatch('saveTodo',{
                'id':this.id,
                'title':this.title,
                'completed':this.completed,
