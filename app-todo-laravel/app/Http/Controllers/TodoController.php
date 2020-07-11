@@ -59,6 +59,24 @@ class TodoController extends Controller
         return response($todo,200);
     }
 
+        /**
+     * Update all resources in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Todo  $todo
+     * @return \Illuminate\Http\Response
+     */
+    public function updateAll(Request $request)
+    {
+        $data=$request->validate([
+            'completed'=>'required|boolean'
+        ]);
+
+        Todo::query()->update($data);
+
+        return response('Actualizado',200);
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -66,9 +84,27 @@ class TodoController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy(Todo $todo)
-    {
+    {   
         $todo->delete();
-        DB::raw('ALTER TABLE todos AUTO_INCREMENT = 1');
+        DB::statement('ALTER TABLE todos AUTO_INCREMENT = 1');
         return response('elemento eliminado',200); 
+    }
+
+        /**
+     * Remove all resource from storage.
+     *
+     * @param  \App\Todo  $todo
+     * @return \Illuminate\Http\Response
+     */
+    public function destroyAll(Request $request)
+    {   
+        $data=$request->validate([
+            'todos'=>'required|array'
+        ]);
+
+        Todo::destroy($request->todos);
+        DB::statement('ALTER TABLE todos AUTO_INCREMENT = 1');
+
+        return response('Todos eliminados',200); 
     }
 }

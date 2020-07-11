@@ -40,7 +40,6 @@ export const store = new Vuex.Store({
             })
         },
         clearCompleted(state) {
-
             state.todos = state.todos.filter(t => !t.completed)
         },
         changeFilter(state, filter) {
@@ -71,7 +70,6 @@ export const store = new Vuex.Store({
                 title: todo.title,
                 completed: false
             }).then(res => {
-                console.log(res)
                 context.commit('addTodo', res.data)
             }).catch(err => {
                 console.log(err)
@@ -79,18 +77,40 @@ export const store = new Vuex.Store({
 
         },
         clearCompleted(context) {
-            context.commit('clearCompleted')
+            const completed = store.state.todos.filter(i => i.completed == true).map(i => i.id)
+
+            axios.delete(`/todosDeleteAll/`, {
+                    data: {
+                        todos: completed
+                    }
+                })
+                .then(res => {
+                    context.commit('clearCompleted')
+                }).catch(err => {
+                    console.log(err)
+                })
         },
         changeFilter(context, filter) {
             context.commit('changeFilter', filter)
 
         },
         checkAllTodos(context, checked) {
-            context.commit('checkAllTodos', checked)
+            axios.patch('/todosCheckAll', {
+                completed: checked
+            }).then(res => {
+                context.commit('checkAllTodos', checked)
+            }).catch(err => {
+                console.log(err)
+            })
 
         },
         removeItem(context, id) {
-            context.commit('removeItem', id)
+            axios.delete(`/todos/${id}`)
+                .then(res => {
+                    context.commit('removeItem', id)
+                }).catch(err => {
+                    console.log(err)
+                })
 
         },
         saveTodo(context, todo) {

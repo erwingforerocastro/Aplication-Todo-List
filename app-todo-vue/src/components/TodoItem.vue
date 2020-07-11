@@ -39,7 +39,7 @@ export default {
     },
     watch: {
      checkAll(){
-        this.completed=this.checkAll?true:this.completed
+        this.completed=this.checkAll?true:this.todo.completed
      }
    },
    created(){
@@ -50,7 +50,7 @@ export default {
    },
     methods: {
         removeItem(id){
-            this.$store.commit('removeItem',id)
+            this.$store.dispatch('removeItem',id)
         },
         editTodo(){
            this.beforeEditcache=this.title
