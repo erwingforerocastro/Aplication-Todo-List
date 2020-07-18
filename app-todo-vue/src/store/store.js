@@ -1,12 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
+import db from '../firebase'
 
 Vue.use(Vuex)
 axios.defaults.baseURL = 'http://127.0.0.1:8000/api'
 
 export const store = new Vuex.Store({
     state: {
+        loading: true,
         filter: 'all',
         todos: []
     },
@@ -36,6 +38,7 @@ export const store = new Vuex.Store({
                 id: todo.id,
                 title: todo.title,
                 completed: false,
+                timestamp: new Date(),
                 editing: false
             })
         },
@@ -52,7 +55,9 @@ export const store = new Vuex.Store({
         },
         removeItem(state, id) {
             let index = state.todos.findIndex(item => item.id == id)
-            state.todos.splice(index, 1)
+            if (index > 0) {
+                state.todos.splice(index, 1)
+            }
         },
         saveTodo(state, todo) {
             let index = state.todos.findIndex(item => item.id == todo.id)
@@ -66,28 +71,31 @@ export const store = new Vuex.Store({
     },
     actions: {
         addTodo(context, todo) {
-            axios.post('/todos', {
+            db.collection('todos').add({
                 title: todo.title,
-                completed: false
-            }).then(res => {
-                context.commit('addTodo', res.data)
-            }).catch(err => {
-                console.log(err)
+                completed: false,
+                timestamp: new Date(),
+            }).then(docRef => {
+                console.log(docRef)
+                context.commit('addTodo', {
+                    id: docRef.id,
+                    title: todo.title,
+                    completed: false,
+                })
             })
+
 
         },
         clearCompleted(context) {
-            const completed = store.state.todos.filter(i => i.completed == true).map(i => i.id)
 
-            axios.delete(`/todosDeleteAll/`, {
-                    data: {
-                        todos: completed
-                    }
-                })
-                .then(res => {
-                    context.commit('clearCompleted')
-                }).catch(err => {
-                    console.log(err)
+            db.collection('todos').where('completed', '==', true).get()
+                .then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        doc.ref.delete()
+                            .then(() => {
+                                context.commit('clearCompleted')
+                            })
+                    })
                 })
         },
         changeFilter(context, filter) {
@@ -95,41 +103,82 @@ export const store = new Vuex.Store({
 
         },
         checkAllTodos(context, checked) {
-            axios.patch('/todosCheckAll', {
-                completed: checked
-            }).then(res => {
-                context.commit('checkAllTodos', checked)
-            }).catch(err => {
-                console.log(err)
-            })
+            db.collection('todos').get()
+                .then(querySnapshot => {
+                    querySnapshot.forEach(doc => {
+                        doc.ref.update({
+                            completed: checked
+                        }).then(() => {
+                            context.commit('checkAllTodos', checked)
+                        })
+                    })
+                })
 
         },
         removeItem(context, id) {
-            axios.delete(`/todos/${id}`)
-                .then(res => {
+            db.collection('todos').doc(id).delete()
+                .then(() => {
                     context.commit('removeItem', id)
-                }).catch(err => {
-                    console.log(err)
                 })
 
         },
         saveTodo(context, todo) {
-            axios.patch(`/todos/${todo.id}`, {
+            db.collection('todos').doc(todo.id).set({
+                id: todo.id,
                 title: todo.title,
-                completed: todo.completed
-            }).then(res => {
-                context.commit('saveTodo', res.data)
-            }).catch(err => {
-                console.log(err)
+                completed: todo.completed,
+                timestamp: new Date(),
+            }).then(() => {
+                context.commit('saveTodo', todo)
             })
 
         },
         retrieveTodos(context) {
-            axios.get('/todos').then(res => {
-                context.commit('retrieveTodos', res.data)
-            }).catch(err => {
-                console.log(err)
-            })
+            context.state.loading = true
+            db.collection('todos').get()
+                .then(querySnapshot => {
+                    let todos = []
+                    querySnapshot.forEach(i => {
+                        const data = {
+                            id: i.id,
+                            title: i.data().title,
+                            completed: i.data().completed,
+                            timestamp: i.data().timestamp
+                        }
+                        todos.push(data)
+                    })
+                    context.state.loading = false
+                    todos = todos.sort((a, b) => a.timestamp.seconds - b.timestamp.seconds)
+                    context.commit('retrieveTodos', todos)
+                })
+
         },
+        initRealtimeListeners(context) {
+            db.collection("todos").onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const source = change.doc.metadata.hasPendingWrites ? "Local" : "Server";
+                        if (source == 'Server') {
+                            context.commit('addTodo', {
+                                id: change.doc.id,
+                                title: change.doc.data().title,
+                                completed: false,
+                            })
+                        }
+
+                    }
+                    if (change.type === "modified") {
+                        context.commit('saveTodo', {
+                            id: change.doc.id,
+                            title: change.doc.data().title,
+                            completed: change.doc.data().completed,
+                        })
+                    }
+                    if (change.type === "removed") {
+                        context.commit('removeItem', change.doc.id)
+                    }
+                })
+            })
+        }
     }
 })

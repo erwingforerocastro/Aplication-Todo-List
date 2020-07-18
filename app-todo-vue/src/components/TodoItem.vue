@@ -4,7 +4,7 @@
             <input type="checkbox" v-model="completed" @change="saveTodo">
             <div v-if="!editing" @dblclick="editTodo" class="todo-item-label" :class="{completed:completed}">{{title}}</div>
             <input v-else class="todo-item-edit" type="text" v-model="title" @blur="saveTodo" 
-            @keyup.enter="saveTodo" @keyup.escape="cancelEdit" v-focus>
+            @keyup.enter="saveTodo" @keyup.escape="cancelEdit">
         </div>
         <div>
             <button @click="pluralize">Plural</button>
@@ -40,6 +40,10 @@ export default {
     watch: {
      checkAll(){
         this.completed=this.checkAll?true:this.todo.completed
+     },
+     todo(){
+         this.title=this.todo.title
+         this.completed=this.todo.completed
      }
    },
    created(){
