@@ -179,6 +179,20 @@ export const store = new Vuex.Store({
                     }
                 })
             })
+        },
+        retrieveToken(context, credentials) {
+            db.collection('todos').add({
+                title: todo.title,
+                completed: false,
+                timestamp: new Date(),
+            }).then(docRef => {
+                console.log(docRef)
+                context.commit('addTodo', {
+                    id: docRef.id,
+                    title: todo.title,
+                    completed: false,
+                })
+            })
         }
     }
 })

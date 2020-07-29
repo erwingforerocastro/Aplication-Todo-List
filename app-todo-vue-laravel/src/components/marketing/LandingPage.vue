@@ -1,5 +1,5 @@
 <template>
     <div>
-        contenido de login
+        Landing
     </div>
 </template>
